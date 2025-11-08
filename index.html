@@ -10,35 +10,48 @@
     margin:0; padding:0; height:100%;
     font-family:'Quicksand','Microsoft Yahei',sans-serif;
     overflow:hidden; text-align:center;
-    color:#222; 
-    background:#f8f3e6; /* 全局备用背景色 */
+    color:#fff;
+    background:#000;
   }
+
+  /* 背景图完整显示 + 横向重复 */
   body::before{
-    content:"";
-  	position:fixed; inset:0;
-  	background-image: url('images/birthday-bg.jpg');
-  	background-repeat: repeat-x;          /* ✅ 横向重复 */
-  	background-size: auto 100%;           /* ✅ 纵向撑满页面，高度适配屏幕 */
-  	background-position: center bottom;   /* ✅ 可改为 top center / bottom center */
-  	filter: brightness(1.05) saturate(1.1);
-  	z-index:0;
-    /* 本地图片加载失败时显示备用色 */
-    background-color: #f8f3e6;
+    content:""; position:fixed; inset:0;
+    background:url('images/birthday-bg.jpg') center bottom/contain repeat-x;
+    filter: brightness(1.05) saturate(1.1);
+    z-index:0;
   }
+
+  /* 遮罩层 */
   body::after{
-    content:""; position:fixed; inset:0; background:rgba(255,255,255,0.25); z-index:1;
+    content:""; position:fixed; inset:0;
+    background:rgba(0,0,0,0.35);
+    z-index:1;
   }
+
+  /* 文字框 */
   #textBox{
     position:absolute; top:50%; left:50%;
     transform:translate(-50%,-50%);
-    background:rgba(255,255,255,0.6);
+    background:rgba(0,0,0,0.55);
     padding:28px 38px; border-radius:22px;
-    max-width:90%; box-shadow:0 6px 18px rgba(0,0,0,0.1);
+    max-width:90%; color:#fff;
+    box-shadow:0 8px 25px rgba(0,0,0,0.3);
+    z-index:2;
     transition:opacity .5s ease;
-    z-index:2
   }
-  #textBox p{margin:0; font-size:clamp(20px,4vw,28px); line-height:1.6;}
-  #textBox span{display:block; margin-top:10px; font-size:clamp(18px,3vw,24px);}
+  #textBox p{
+    margin:0;
+    font-size:clamp(20px,4vw,28px);
+    line-height:1.6;
+    text-shadow:0 0 8px rgba(0,0,0,0.4);
+  }
+  #textBox span{
+    display:block;
+    margin-top:10px;
+    font-size:clamp(18px,3vw,24px);
+    color:#fff8e6;
+  }
   .hidden{opacity:0;}
   .visible{opacity:1;}
   .flash{
@@ -46,27 +59,54 @@
     font-size:clamp(26px,5vw,38px);
     font-weight:600;
     letter-spacing:2px;
-    color:#ff4b4b;
+    color:#ff6b6b;
   }
   @keyframes flash{
-    from{opacity:0.4; text-shadow:0 0 6px #ffcccc;}
+    from{opacity:0.6; text-shadow:0 0 6px #ffcccc;}
     to{opacity:1; text-shadow:0 0 16px #ff4b4b;}
   }
+
   .hint{
     position:fixed; bottom:20px; width:100%; text-align:center;
-    font-size:14px; color:#333; opacity:0.75; letter-spacing:1px;
+    font-size:14px; color:#fff; opacity:0.75; letter-spacing:1px;
+    z-index:3;
+  }
+
+  /* ✅ 手机端优化 */
+  @media (max-width: 768px) {
+    #textBox{
+      width:85%;
+      padding:20px 24px;
+      border-radius:16px;
+      background:rgba(0,0,0,0.55);
+    }
+    #textBox p{
+      font-size:18px;
+      line-height:1.5;
+    }
+    #textBox span{
+      font-size:16px;
+    }
+    .flash{
+      font-size:24px;
+    }
+    .hint{
+      font-size:12px;
+      bottom:10px;
+    }
   }
 </style>
 </head>
+
 <body>
 <div id="textBox" class="hidden">
   <p id="line"></p>
 </div>
-<div class="hint">点击屏幕继续 🎈</div>
+<div class="hint" id="hint">点击屏幕继续 🎈</div>
 
-<!-- 本地音乐文件 -->
+<!-- 背景音乐 -->
 <audio id="bgm" preload="auto" loop>
-  <source src="Starlight Memories (星光记忆) - Dennis Kuo.mp3" type="audio/mpeg">
+  <source src="Starlight-Memories.mp3" type="audio/mpeg">
 </audio>
 
 <script>
@@ -76,84 +116,37 @@ const lines=[
   "🌟 生日快乐，Y先生～<br><span>保持开心、平安健康，一切都刚刚好！</span>",
   "<span class='flash'>✨ Happy Birthday! ✨</span>"
 ];
+
 let idx=0;
 const box=document.getElementById('textBox');
 const line=document.getElementById('line');
 const bgm=document.getElementById('bgm');
-const hint=document.querySelector('.hint');
+const hint=document.getElementById('hint');
 
-// 检查本地背景图是否加载成功
-function checkLocalImage() {
-  const img = new Image();
-  img.src = 'images/birthday-bg.jpg'; // 检测本地图片
-  img.onerror = function() {
-    // 本地图片加载失败时，在控制台提示（不影响用户，仅开发者可见）
-    console.log('本地背景图加载失败，已显示备用背景色');
-  };
-}
+/* ✅ 音乐自动播放兼容移动端 */
+document.addEventListener('DOMContentLoaded', function() {
+  bgm.volume = 0;
+  bgm.play().then(() => {
+    setTimeout(() => bgm.volume = 1, 800);
+  }).catch(()=>{});
+});
+
+document.addEventListener('click', () => {
+  if (bgm.paused) bgm.play();
+  showNext();
+});
 
 function showNext(){
-  if(idx === 0){
-    bgm.play().catch(()=>{
-      hint.textContent = "请点击播放音乐 🎵";
-    });
-    hint.style.opacity = 0.4;
-  }
-
-  if(idx < lines.length){
-    line.innerHTML = lines[idx];
+  if(idx<lines.length){
+    line.innerHTML=lines[idx];
     box.classList.remove('hidden');
     box.classList.add('visible');
-
-    // ✅ 当显示最后一页时，隐藏“点击屏幕继续 🎈”
-    if(idx === lines.length - 1){
-      hint.style.display = 'none';
+    if(idx===lines.length-1){
+      hint.style.display='none';
     }
-
     idx++;
   }
 }
-
-
-document.addEventListener('click',showNext);
-// 页面加载时检查本地图片
-checkLocalImage();
 </script>
 </body>
 </html>
-/* ======= 📱 手机端优化 ======= */
-@media (max-width: 768px) {
-
-  html, body {
-    overflow: hidden;
-    height: 100%;
-  }
-
-  body::before {
-    background-size: auto 100%;     /* ✅ 高度适应屏幕 */
-    background-repeat: repeat-x;    /* ✅ 横向重复 */
-    background-position: center bottom;
-    filter: brightness(0.9) saturate(1.1); /* 稍微降低亮度 */
-  }
-
-  #textBox {
-    padding: 20px 24px;             /* ✅ 缩小边距 */
-    width: 85%;                     /* ✅ 控制宽度 */
-    background: rgba(0,0,0,0.55);   /* ✅ 手机上再深一点 */
-  }
-
-  #textBox p {
-    font-size: clamp(18px, 5vw, 22px);
-    line-height: 1.5;
-  }
-
-  #textBox span {
-    font-size: clamp(16px, 4vw, 20px);
-  }
-
-  .hint {
-    font-size: 12px;
-    bottom: 10px;
-    opacity: 0.6;
-  }
-}
