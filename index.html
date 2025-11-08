@@ -15,13 +15,15 @@
   }
 
   /* 背景图完整显示 + 横向重复 */
-  body::before{
-    content:""; position:fixed; inset:0;
-    background:url('images/birthday-bg.jpg') center bottom/contain repeat-x;
-    filter: brightness(1.05) saturate(1.1);
-    z-index:0;
-  }
-
+	body::before{
+  	content:""; 
+  	position:fixed; 
+  	inset:0;
+  	background:url('images/birthday-bg.jpg') center top / 100% auto repeat-x;
+  	background-attachment: scroll; /* 防止 iPhone 固定背景错位 */
+  	filter: brightness(1.05) saturate(1.1);
+  	z-index:0;
+	}
   /* 遮罩层 */
   body::after{
     content:""; position:fixed; inset:0;
@@ -40,18 +42,19 @@
     z-index:2;
     transition:opacity .5s ease;
   }
-  #textBox p{
-    margin:0;
-    font-size:clamp(20px,4vw,28px);
-    line-height:1.6;
-    text-shadow:0 0 8px rgba(0,0,0,0.4);
-  }
-  #textBox span{
-    display:block;
-    margin-top:10px;
-    font-size:clamp(18px,3vw,24px);
-    color:#fff8e6;
-  }
+	#textBox p{
+  	margin:0;
+  	font-size:clamp(16px,3vw,22px); /* 👈 字体整体调小 */
+  	line-height:1.5;
+  	text-shadow:0 0 8px rgba(0,0,0,0.4);
+	}
+
+	#textBox span{
+	  display:block;
+	  margin-top:8px;
+	  font-size:clamp(14px,2.5vw,18px); /* 👈 更紧凑的副文字 */
+	  color:#fff8e6;
+	}
   .hidden{opacity:0;}
   .visible{opacity:1;}
   .flash{
